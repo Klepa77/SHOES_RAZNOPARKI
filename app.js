@@ -39,7 +39,7 @@ function editRow(id) {
 }
 
 function saveRow(id){
-  alert('Функция сохранения пока не реализована. ID: ' + id);
+  alert('Функция co[] пока не реализована. ID: ' + id);
 
 }
 
@@ -82,4 +82,60 @@ document.getElementById('uploadBtn').addEventListener('click', () => {
   reader.readAsArrayBuffer(file); // Начинаем чтение файла
 });
 
+function addShoe() {
+  // Получаем значения из формы
+  const article = document.getElementById("article").value || "";
+  const color = document.getElementById("color").value || "";
+  const size = document.getElementById("size").value || "";
+  const leftSize = document.getElementById("leftSize").value || "";
+  const rightSize = document.getElementById("rightSize").value || "";
+  const otherArticle = document.getElementById("otherArticle").value || "";
+  const otherColor = document.getElementById("otherColor").value || "";
+  const otherLeftSize = document.getElementById("otherLeftSize").value || "";
+  const otherRightSize = document.getElementById("otherRightSize").value || "";
+  const pallet = document.getElementById("pallet").value || "";
 
+  // Парсинг размеров (если есть "/", разбиваем, иначе оставляем как есть)
+  const parseSize = (sizeValue) => {
+    if (sizeValue.includes("/")) {
+      const [left, right] = sizeValue.split("/").map(s => s.trim());
+      return `${left}/${right}`; // Сохраняем формат "левый/правый"
+    }
+    return sizeValue; // Оставляем как есть (например, "43")
+  };
+
+  // Формируем новую строку
+  const newRow = [
+    article,
+    color,
+    size,
+    parseSize(leftSize),
+    parseSize(rightSize),
+    otherArticle,
+    otherColor,
+    parseSize(otherLeftSize),
+    parseSize(otherRightSize),
+    pallet
+  ];
+
+  // Добавляем новую строку в shoesData
+  shoesData.push(newRow);
+
+  // Обновляем таблицу
+  renderShoesTable(shoesData);
+
+  // Очищаем форму (опционально)
+  document.getElementById("article").value = "";
+  document.getElementById("color").value = "";
+  document.getElementById("size").value = "";
+  document.getElementById("leftSize").value = "";
+  document.getElementById("rightSize").value = "";
+  document.getElementById("otherArticle").value = "";
+  document.getElementById("otherColor").value = "";
+  document.getElementById("otherLeftSize").value = "";
+  document.getElementById("otherRightSize").value = "";
+  document.getElementById("pallet").value = "";
+}
+
+// Привязываем функцию к кнопке "Добавить"
+document.getElementById("addBtn").addEventListener("click", addShoe);
