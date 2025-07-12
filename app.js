@@ -24,6 +24,7 @@ function renderShoesTable(data) {
       <td>
         <div class="action-buttons">
           <button class="action-btn edit-btn" onclick="editRow('${index + 1}')">Редактировать</button>
+          <button class="action-btn save-btn" onclick="saveRow('${index + 1}')">Сохранить</button>
           <button class="action-btn delete-btn" onclick="deleteRow('${index + 1}')">Удалить</button>
         </div>
       </td>
@@ -35,6 +36,11 @@ function renderShoesTable(data) {
 // Пустые функции для placeholder
 function editRow(id) {
   alert('Функция редактирования пока не реализована. ID: ' + id);
+}
+
+function saveRow(id){
+  alert('Функция сохранения пока не реализована. ID: ' + id);
+
 }
 
 function deleteRow(id) {
