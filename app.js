@@ -139,3 +139,254 @@ function addShoe() {
 
 // Привязываем функцию к кнопке "Добавить"
 document.getElementById("addBtn").addEventListener("click", addShoe);
+
+
+// Валидация формы
+
+// Динамическая валидация для артикула
+document.getElementById("article").oninput = function() {
+  const value = this.value.trim();
+  this.style.border = "1px solid #ccc";
+  if (!value || !(/^\d{6}( D)?$/.test(value))) {
+    this.style.border = "2px solid red";
+  } else {
+    this.style.border = "2px solid green";
+  }
+};
+
+// Динамическая валидация для цвета
+document.getElementById("color").oninput = function() {
+  const value = this.value.trim();
+  this.style.border = "1px solid #ccc";
+  if (!value || !(value.length === 5 && /^\d+$/.test(value))) {
+    this.style.border = "2px solid red";
+  } else {
+    this.style.border = "2px solid green";
+  }
+};
+
+// Динамическая валидация для основного размера
+document.getElementById("size").oninput = function() {
+  const value = this.value.trim();
+  this.style.border = "1px solid #ccc";
+  if (!value || !(value.length === 2 && /^\d+$/.test(value))) {
+    this.style.border = "2px solid red";
+  } else {
+    this.style.border = "2px solid green";
+  }
+};
+
+// Динамическая валидация для дополнительного артикула
+document.getElementById("otherArticle").oninput = function() {
+  const value = this.value.trim();
+  this.style.border = "1px solid #ccc";
+  if (value && !(/^\d{6}( D)?$/.test(value))) {
+    this.style.border = "2px solid red";
+  } else {
+    this.style.border = "2px solid green";
+  }
+};
+
+// Функция для проверки форматов XX и XX/XX
+function validateSizeFormat(value) {
+  value = value.trim();
+  // Проверяем два варианта: ровно 2 цифры ИЛИ 2 цифры + / + 2 цифры
+  return /^\d{2}$/.test(value) || /^\d{2}\/\d{2}$/.test(value);
+}
+
+// Динамическая валидация для левого размера
+document.getElementById("leftSize").oninput = function() {
+  const value = this.value.trim();
+  this.style.border = "1px solid #ccc";
+  if (value && !validateSizeFormat(value)) {
+    this.style.border = "2px solid red";
+  } else {
+    this.style.border = "2px solid green";
+  }
+};
+
+// Динамическая валидация для правого размера
+document.getElementById("rightSize").oninput = function() {
+  const value = this.value.trim();
+  this.style.border = "1px solid #ccc";
+  if (value && !validateSizeFormat(value)) {
+    this.style.border = "2px solid red";
+  } else {
+    this.style.border = "2px solid green";
+  }
+};
+
+// Динамическая валидация для дополнительного левого размера
+document.getElementById("otherLeftSize").oninput = function() {
+  const value = this.value.trim();
+  this.style.border = "1px solid #ccc";
+  if (value && !validateSizeFormat(value)) {
+    this.style.border = "2px solid red";
+  } else {
+    this.style.border = "2px solid green";
+  }
+};
+
+// Динамическая валидация для дополнительного правого размера
+document.getElementById("otherRightSize").oninput = function() {
+  const value = this.value.trim();
+  this.style.border = "1px solid #ccc";
+  if (value && !validateSizeFormat(value)) {
+    this.style.border = "2px solid red";
+  } else {
+    this.style.border = "2px solid green";
+  }
+};
+
+// Динамическая валидация для дополнительного цвета
+document.getElementById("otherColor").oninput = function() {
+  const value = this.value.trim();
+  this.style.border = "1px solid #ccc";
+  if (value && !(value.length === 5 && /^\d+$/.test(value))) {
+    this.style.border = "2px solid red";
+  } else {
+    this.style.border = "2px solid green";
+  }
+};
+
+// Динамическая валидация для паллета
+document.getElementById("pallet").oninput = function() {
+  const value = this.value.trim();
+  this.style.border = "1px solid #ccc";
+  if (!value || !(value.length > 0)) {
+    this.style.border = "2px solid red";
+  } else {
+    this.style.border = "2px solid green";
+  }
+};
+
+// Функция проверки всей формы
+function validateForm() {
+  const fields = {
+    article: { 
+      id: "article", 
+      required: true, 
+      validate: function(value) { 
+        return /^\d{6}( D)?$/.test(value.trim()); 
+      } 
+    },
+    color: { 
+      id: "color", 
+      required: true, 
+      validate: function(value) { 
+        return value.trim().length === 5 && /^\d+$/.test(value); 
+      } 
+    },
+    size: { 
+      id: "size", 
+      required: true, 
+      validate: function(value) { 
+        return value.trim().length === 2 && /^\d+$/.test(value); 
+      } 
+    },
+    leftSize: { 
+      id: "leftSize", 
+      required: false, 
+      validate: function(value) { 
+        return !value || validateSizeFormat(value); 
+      } 
+    },
+    rightSize: { 
+      id: "rightSize", 
+      required: false, 
+      validate: function(value) { 
+        return !value || validateSizeFormat(value); 
+      } 
+    },
+    otherArticle: { 
+      id: "otherArticle", 
+      required: false, 
+      validate: function(value) { 
+        return !value || /^\d{6}( D)?$/.test(value.trim()); 
+      } 
+    },
+    otherColor: { 
+      id: "otherColor", 
+      required: false, 
+      validate: function(value) { 
+        return !value || (value.trim().length === 5 && /^\d+$/.test(value)); 
+      } 
+    },
+    otherLeftSize: { 
+      id: "otherLeftSize", 
+      required: false, 
+      validate: function(value) { 
+        return !value || validateSizeFormat(value); 
+      } 
+    },
+    otherRightSize: { 
+      id: "otherRightSize", 
+      required: false, 
+      validate: function(value) { 
+        return !value || validateSizeFormat(value); 
+      } 
+    },
+    pallet: { 
+      id: "pallet", 
+      required: true, 
+      validate: function(value) { 
+        return value.trim().length > 0; 
+      } 
+    }
+  };
+
+  // Сбрасываем все границы перед проверкой
+  Object.values(fields).forEach(function(field) {
+    document.getElementById(field.id).style.border = "1px solid #ccc";
+  });
+
+  let hasError = false;
+  for (let fieldName in fields) {
+    const field = fields[fieldName];
+    const inputElement = document.getElementById(field.id);
+    const inputValue = inputElement.value.trim();
+    
+    // Проверяем только если поле обязательно или заполнено
+    if (field.required || inputValue) {
+      if (!field.validate(inputValue)) {
+        inputElement.style.border = "2px solid red";
+        hasError = true;
+      } else {
+        inputElement.style.border = "2px solid green";
+      }
+    }
+  }
+
+  return !hasError;
+}
+
+// Функция добавления данных
+function addShoe() {
+  if (validateForm()) {
+    const formData = {
+      article: document.getElementById("article").value.trim(),
+      color: document.getElementById("color").value.trim(),
+      size: document.getElementById("size").value.trim(),
+      leftSize: document.getElementById("leftSize").value.trim(),
+      rightSize: document.getElementById("rightSize").value.trim(),
+      otherArticle: document.getElementById("otherArticle").value.trim(),
+      otherColor: document.getElementById("otherColor").value.trim(),
+      otherLeftSize: document.getElementById("otherLeftSize").value.trim(),
+      otherRightSize: document.getElementById("otherRightSize").value.trim(),
+      pallet: document.getElementById("pallet").value.trim()
+    };
+
+    // Добавляем данные (предполагается, что shoesData и renderShoesTable существуют)
+    shoesData.push(Object.values(formData));
+    renderShoesTable(shoesData);
+
+    // Очищаем все поля формы
+    Object.keys(formData).forEach(function(fieldName) {
+      document.getElementById(fieldName).value = "";
+      document.getElementById(fieldName).style.border = "1px solid #ccc";
+    });
+  }
+}
+
+// Назначаем обработчик кнопке "Добавить"
+document.getElementById("addBtn").addEventListener("click", addShoe);
