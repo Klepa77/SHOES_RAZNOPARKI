@@ -390,67 +390,100 @@ function addShoe() {
 document.getElementById("addBtn").addEventListener("click", addShoe);
 
 // Новая функция фильтрации (исправлена для обработки ошибок и рендера только по клику)
+
 function filterTable() {
   const filterInput = document.getElementById('filterInput');
   const filterBtn = document.getElementById('filterBtn');
-  if (!filterInput || !filterBtn) {
-    console.error('Элементы filterInput или filterBtn не найдены в DOM');
-    return;
-  }
+  if (!filterInput || !filterBtn) return;
+
+  filterBtn.disabled = true;
+  filterBtn.textContent = 'Фильтрация...';
 
   const filterValue = filterInput.value.trim().toLowerCase();
   if (!filterValue) {
-    renderShoesTable(shoesData); // Показываем все данные, если фильтр пуст
+    renderShoesTable(shoesData);
     console.log('Нет данных для фильтрации, показаны все данные');
-    return;
+  } else {
+    const filteredData = [];
+    const seen = new Set();
+    const inputParts = filterValue.split(/\s+/);
+    const artInput = inputParts[0].startsWith('=') 
+      ? inputParts[0].slice(1) 
+      : inputParts[0];
+    const isExactMatch = inputParts[0].startsWith('=');
+    const colorInput = inputParts[1] || '';
+    const sizeInput = inputParts[2] || '';
+
+    console.log('Filter input parsed:', { filterValue, artInput, isExactMatch, colorInput, sizeInput });
+
+    shoesData.forEach((row, index) => {
+      const safeToString = (val) => 
+        val !== undefined ? String(val).toLowerCase().trim() : '';
+      
+      const art0 = safeToString(row[0]).replace(/\s+/g, '');
+      const art5 = safeToString(row[5]).replace(/\s+/g, '');
+      const color = safeToString(row[1]);
+      const leftSize = safeToString(row[3]);
+      const rightSize = safeToString(row[4]);
+      const pallet = safeToString(row[9]);
+
+      console.log(`Processing row ${index + 1}:`, { row, art0, art5, color, leftSize, rightSize, pallet });
+
+      let match = false;
+
+      if (artInput) {
+        if (isExactMatch) {
+          match = art0 === artInput || art5 === artInput;
+        } else {
+          match = art0.includes(artInput) || art5.includes(artInput);
+        }
+        if (artInput.endsWith('d')) {
+          match = match || art0.includes('d') || art5.includes('d');
+        }
+        console.log(`Art match check for row ${index + 1}:`, { art0, art5, artInput, isExactMatch, match });
+      }
+
+      if (match && colorInput && color !== colorInput) {
+        match = false;
+        console.log(`Color filter failed for row ${index + 1}:`, { color, colorInput });
+      }
+
+      if (match && sizeInput) {
+        const normalizeSize = (size) => size.replace(/[^0-9]/g, '').split('/')[0];
+        const leftNorm = normalizeSize(leftSize);
+        const rightNorm = normalizeSize(rightSize);
+        match = leftNorm === sizeInput || rightNorm === sizeInput;
+        console.log(`Size check for row ${index + 1}:`, { leftNorm, rightNorm, sizeInput, match });
+      }
+
+      if (!match && pallet === filterValue) {
+        match = true;
+        console.log(`Pallet match for row ${index + 1}:`, { pallet, filterValue });
+      }
+
+      const rowKey = row.join('|');
+      if (match && !seen.has(rowKey)) {
+        filteredData.push(row);
+        seen.add(rowKey);
+        console.log(`Row added ${index + 1}:`, row);
+      }
+    });
+
+    renderShoesTable(filteredData);
+    console.log('Отфильтрованные данные:', filteredData);
   }
 
-  const filteredData = [];
-  const seen = new Set();
-
-  const [artInput = '', colorInput = '', sizeInput = ''] = filterValue.split(' ').map(s => s.trim());
-  const isExactMatch = artInput.startsWith('=');
-  const artSearch = isExactMatch ? artInput.slice(1) : artInput;
-
-  shoesData.forEach(row => {
-    const art0 = row[0] && typeof row[0] === 'string' ? row[0].toLowerCase() : '';
-    const color = row[1] && typeof row[1] === 'string' ? row[1].toLowerCase() : '';
-    const size = row[3] && typeof row[3] === 'string' ? row[3].split('/')[0].trim() : '';
-    const art5 = row[5] && typeof row[5] === 'string' ? row[5].toLowerCase() : ''; // Безопасная обработка
-    const pallet = row[9] && typeof row[9] === 'string' ? row[9].toLowerCase() : '';
-
-    let match = false;
-    if (isExactMatch) {
-      match = art0 === artSearch;
-    } else if (artSearch) {
-      match = art0.startsWith(artSearch);
-    }
-    if (art5 && artSearch && (isExactMatch ? art5 === artSearch : art5.startsWith(artSearch))) match = true;
-    if (artSearch === 'd' && (art0.includes('d') || (art5 && art5.includes('d')))) match = true;
-    if (colorInput && color !== colorInput) match = false;
-    if (sizeInput && size !== sizeInput) match = false;
-    if (pallet === filterValue) match = true;
-
-    if (match && !seen.has(row.join('|'))) {
-      filteredData.push(row);
-      seen.add(row.join('|'));
-    }
-  });
-
-  renderShoesTable(filteredData); // Рендерим отфильтрованные данные
-  console.log('Отфильтрованные данные:', filteredData); // Выводим для отладки
-  if (filterBtn.matches(':active')) {
-    filterInput.value = ''; // Очистка инпута при клике на кнопку
-  }
+  setTimeout(() => {
+    filterBtn.disabled = false;
+    filterBtn.textContent = 'Фильтровать';
+  }, 500);
 }
 
-// Инициализация фильтрации (только по клику)
 document.addEventListener('DOMContentLoaded', () => {
   const filterInput = document.getElementById('filterInput');
   const filterBtn = document.getElementById('filterBtn');
   if (filterInput && filterBtn) {
-    filterBtn.addEventListener('click', filterTable); // Только по клику
-  } else {
-    console.error('Элементы filterInput или filterBtn не найдены при загрузке');
+    filterBtn.addEventListener('click', filterTable);
+    console.log('Loaded shoesData:', shoesData); // Проверяем данные при загрузке страницы
   }
 });
