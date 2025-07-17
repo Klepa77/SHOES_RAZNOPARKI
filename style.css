@@ -255,3 +255,11 @@ tbody tr:hover {
     font-size: 1.2em;
   }
 }
+
+
+
+input {
+  border: 1px solid #ccc;
+  padding: 5px;
+  margin: 5px 0;
+}

@@ -21,28 +21,28 @@
     </div>
 
     <!-- Форма для добавления новой записи -->
-    <div class="add-section">
-      <h2>Добавить новую обувь</h2>
-      <div class="form-group">
-        <input type="text" id="article" placeholder="Артикул" />
-        <input type="text" id="color" placeholder="Цвет" />
-        <input type="number" id="size" placeholder="Размер" />
-        <input type="text" id="leftSize" placeholder="Левый размер" />
-        <input type="text" id="rightSize" placeholder="Правый размер" />
-        <input type="text" id="otherArticle" placeholder="Артикул др-й пары" />
-        <input type="text" id="otherColor" placeholder="Цвет др-й пары" />
-        <input type="text" id="otherLeftSize" placeholder="Левый разм.др-й пары" />
-        <input type="text" id="otherRightSize" placeholder="Правый разм.др-й пары" />
-        <input type="text" id="pallet" placeholder="Паллет" />
-        <button id="addBtn" class="btn add-btn">Добавить</button>
-      </div>
-    </div>
-
+  <div class="add-section">
+  <h2>Добавить новую обувь</h2>
+  <div class="form-group">
+    <input type="text" id="article" placeholder="Артикул (6-7 цифр, опц. D)" />
+    <input type="text" id="color" placeholder="Цвет (5 цифр)" />
+    <input type="text" id="size" placeholder="Размер (2 цифры)" maxlength="2" />
+    <input type="text" id="leftSize" placeholder="Левый размер (2 или 4 цифры, напр. 42/42)" />
+    <input type="text" id="rightSize" placeholder="Правый размер (2 или 4 цифры, напр. 42/42)" />
+    <input type="text" id="otherArticle" placeholder="Др. артикул (6-7 цифр, опц. D)" />
+    <input type="text" id="otherColor" placeholder="Др. цвет (5 цифр)" />
+    <input type="text" id="otherLeftSize" placeholder="Др. лев. размер (2 или 4 цифры, напр. 42/42)" />
+    <input type="text" id="otherRightSize" placeholder="Др. прав. размер (2 или 4 цифры, напр. 42/42)" />
+    <input type="text" id="pallet" placeholder="Паллет (обязательно)" />
+    <button id="addBtn" class="btn add-btn">Добавить</button>
+  </div>
+</div>
+    
     <!-- Секция фильтрации -->
     <div class="filter-section">
       <h2>Фильтровать данные</h2>
       <div class="filter-group">
-        <input type="text" id="filterInput" placeholder="Поиск по артикулу или цвету..." />
+        <input type="text" id="filterInput" placeholder="Введите артикул [=артикул] [цвет размер]" />
         <button id="filterBtn" class="btn filter-btn">Фильтровать</button>
       </div>
     </div>

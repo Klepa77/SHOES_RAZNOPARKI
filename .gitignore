@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 node_modules/
 .idea/
 *.docx
 .DS_Store
 package-lock.json
+=======
+node_modules
+*.docx
+>>>>>>> 4b3991463d9d4d455268f4eefcbc4caa2d46b2a6
