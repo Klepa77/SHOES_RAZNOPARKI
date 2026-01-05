@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Статистика обуви</title>
+ <!-- Подключение библиотек -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Подключение стилей -->
+  <link rel="stylesheet" href="stats.css">
+</head>
+<body>
+  <h1>Статистика по месяцам</h1>
+  <!-- Контейнер для диаграммы -->
+  <canvas id="statsChart" width="400" height="200"></canvas>
+  <!-- Таблица статистики -->
+  <table id="statsTable">
+    <thead>
+      <tr>
+        <th>Месяц</th>
+        <th>Загружено</th>
+        <th>Спарено</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <!-- Кнопки экспорта (пока без функций) -->
+  <div class="export-buttons">
+    <button>Экспорт в CSV</button>
+    <button>Экспорт в PDF</button>
+  </div>
+  <!-- Подключение скрипта (пока пустое) -->
+  <script src="stats.js"></script>
+</body>
+</html>

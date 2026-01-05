@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <!-- Добавьте в <head> -->
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#667eea">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Сканер обуви</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; color: #333; }
+        .container { max-width: 100%; margin: 0 auto; }
+        .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { text-align: center; font-size: 24px; margin-bottom: 10px; color: white; }
+        h2 { font-size: 18px; margin-bottom: 15px; color: #2c3e50; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .btn { width: 100%; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 8px; font-size: 16px; margin-bottom: 10px; }
+        .btn:disabled { background: #cccccc; cursor: not-allowed; }
+        .btn-secondary { background: #6c757d; }
+        .btn-danger { background: #dc3545; }
+        .btn-info { background: #17a2b8; }
+        .notification { padding: 10px; border-radius: 5px; margin: 10px 0; text-align: center; display: none; }
+        .notification.show { display: block; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+        .file-input-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .file-input-button { background: #17a2b8; color: white; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; margin-bottom: 10px; }
+        .parsed-data { background: #e8f5e9; border-radius: 12px; padding: 15px; margin: 15px 0; display: none; }
+        .parsed-data.show { display: block; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .data-item { display: flex; flex-direction: column; }
+        .data-label { font-size: 12px; color: #666; }
+        .data-value { font-weight: 600; font-size: 14px; }
+        .sizes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+        .status-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); padding: 12px 15px; display: flex; justify-content: space-between; font-size: 12px; }
+        .connection-status { display: flex; align-items: center; gap: 5px; }
+        .loading { opacity: 0.6; pointer-events: none; }
+ 
+    </style>
+</head>
+<body>
+   <!-- Анимированный логотип 730 ↔ 731 -->
+
+    <div class="container">
+        <!-- Экран входа -->
+        <div id="loginScreen">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1>Сканер обуви</h1>
+                <div style="color: white; margin-bottom: 20px;">Zebra TC26</div>
+            </div>
+
+            <div class="card">
+                <h2 style="text-align: center;">Вход в систему</h2>
+                
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="ваш@email.com">
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" placeholder="Введите пароль">
+                </div>
+
+                <button class="btn" id="loginBtn">Войти</button>
+
+                <div id="loginNotification" class="notification"></div>
+            </div>
+        </div>
+
+        <!-- Экран сканера -->
+        <div id="scannerScreen" style="display: none;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h1>Сканирование</h1>
+                <div style="color: white; margin-bottom: 20px;">Наведите на штрихкод</div>
+            </div>
+
+            <!-- Блок загрузки CSV -->
+            <div class="card">
+                <h2>Загрузка маппинга штрихкодов</h2>
+                <div class="file-input-wrapper">
+                    <div class="file-input-button">
+                        📁 Выбрать CSV файл с маппингом
+                    </div>
+                    <input type="file" id="csvFile" accept=".csv">
+                </div>
+                <div style="font-size: 12px; color: #666; text-align: center; margin-bottom: 15px;">
+                    Файл должен содержать колонки: Штрихкод, Артикул, Цвет, Размер
+                </div>
+
+                <button class="btn btn-info" id="loadMappingBtn">Загрузить маппинг</button>
+                <button class="btn btn-secondary" id="clearMappingBtn">Очистить маппинг</button>
+
+                <div id="mappingStatus" class="notification"></div>
+            </div>
+
+            <div class="card">
+                <div class="input-group">
+                    <label for="barcodeInput">Штрихкод</label>
+                    <input type="text" id="barcodeInput" placeholder="Отсканируйте штрихкод" autofocus>
+                </div>
+
+                <div id="parsedData" class="parsed-data">
+                    <div class="data-grid">
+                        <div class="data-item">
+                            <span class="data-label">Артикул</span>
+                            <span class="data-value" id="articleDisplay">-</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Цвет</span>
+                            <span class="data-value" id="colorDisplay">-</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Размер</span>
+                            <span class="data-value" id="sizeDisplay">-</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">Статус</span>
+                            <span class="data-value" id="statusDisplay">Найдено</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sizes-grid">
+                    <div class="input-group">
+                        <label for="leftSize">Левый размер</label>
+                        <input type="text" id="leftSize" placeholder="42 или 42/43">
+                    </div>
+                    <div class="input-group">
+                        <label for="rightSize">Правый размер</label>
+                        <input type="text" id="rightSize" placeholder="42 или 42/43">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="pallet">Паллета</label>
+                    <input type="text" id="pallet" placeholder="Номер паллеты">
+                </div>
+
+                <button class="btn" id="addPairBtn">Добавить в систему</button>
+                <button class="btn btn-secondary" id="clearFormBtn">Очистить форму</button>
+                <button class="btn btn-danger" id="logoutBtn">Выйти</button>
+
+                <div id="scanNotification" class="notification"></div>
+            </div>
+
+            <!-- Статус маппинга -->
+            <div class="card">
+                <h2>Статус маппинга</h2>
+                <div style="text-align: center; font-size: 14px;">
+                    Загружено штрихкодов: <strong id="barcodeCount">0</strong>
+                </div>
+                <div style="max-height: 150px; overflow-y: auto; margin-top: 10px; font-size: 12px;">
+                    <div id="mappingList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статус бар -->
+    <div class="status-bar">
+        <div>
+            <span id="userInfo">Не авторизован</span>
+        </div>
+        <div class="connection-status">
+            <span id="connectionStatus">🔴 Оффлайн</span>
+        </div>
+    </div>
+
+    <!-- Подключаем Firebase через CDN -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        // Конфигурация Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4TJwaZIO3V1IoFgdb8VWkYiHhIV-xv2I",
+            authDomain: "shoepairingapp.firebaseapp.com",
+            databaseURL: "https://shoepairingapp-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "shoepairingapp",
+            storageBucket: "shoepairingapp.firebasestorage.app",
+            messagingSenderId: "764417488769",
+            appId: "1:764417488769:web:3b2deb35fb227f2f315a80",
+            measurementId: "G-7Z67JT00JS"
+        };
+
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        let user = null;
+        let isOnline = navigator.onLine;
+        let barcodeMap = new Map();
+        let db = null;
+
+        // Инициализация IndexedDB
+        function initIndexedDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('BarcodeScannerDB', 1);
+                
+                request.onerror = () => {
+                    console.error('Ошибка открытия IndexedDB:', request.error);
+                    reject(request.error);
+                };
+                request.onsuccess = () => {
+                    console.log('IndexedDB успешно открыт');
+                    db = request.result;
+                    resolve(db);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    console.log('Обновление версии IndexedDB');
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains('barcodeMapping')) {
+                        const store = database.createObjectStore('barcodeMapping', { keyPath: 'barcode' });
+                        store.createIndex('barcode', 'barcode', { unique: true });
+                        console.log('Создан объектный сторе barcodeMapping');
+                    }
+                };
+            });
+        }
+
+        // Сохранение в IndexedDB
+        async function saveToIndexedDB(data) {
+            if (!db) await initIndexedDB();
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['barcodeMapping'], 'readwrite');
+                const store = transaction.objectStore('barcodeMapping');
+                
+                const clearRequest = store.clear();
+                clearRequest.onsuccess = () => {
+                    const entries = Array.from(data.entries());
+                    let completed = 0;
+                    
+                    function saveBatch(startIndex) {
+                        const batch = entries.slice(startIndex, startIndex + 100);
+                        if (batch.length === 0) {
+                            console.log('Все данные сохранены в IndexedDB');
+                            resolve();
+                            return;
+                        }
+                        
+                        batch.forEach(([barcode, mapping]) => {
+                            const request = store.put({
+                                barcode: barcode,
+                                article: mapping.article,
+                                color: mapping.color,
+                                size: mapping.size
+                            });
+                            
+                            request.onsuccess = () => {
+                                completed++;
+                                if (completed === entries.length) {
+                                    console.log(`Сохранено ${completed} записей в IndexedDB`);
+                                    resolve();
+                                }
+                            };
+                            
+                            request.onerror = () => {
+                                console.error('Ошибка сохранения в IndexedDB:', request.error);
+                                reject(request.error);
+                            };
+                        });
+                    }
+                    
+                    for (let i = 0; i < entries.length; i += 100) {
+                        saveBatch(i);
+                    }
+                };
+                
+                clearRequest.onerror = () => {
+                    console.error('Ошибка очистки IndexedDB:', clearRequest.error);
+                    reject(clearRequest.error);
+                };
+            });
+        }
+
+        // Загрузка из IndexedDB
+        async function loadFromIndexedDB() {
+            if (!db) await initIndexedDB();
+            
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction(['barcodeMapping'], 'readonly');
+                const store = transaction.objectStore('barcodeMapping');
+                const request = store.getAll();
+                
+                request.onsuccess = () => {
+                    console.log('Запрос к IndexedDB успешен, получено записей:', request.result.length);
+                    barcodeMap.clear();
+                    request.result.forEach(item => {
+                        barcodeMap.set(item.barcode, {
+                            article: item.article,
+                            color: item.color,
+                            size: item.size
+                        });
+                    });
+                    console.log(`Загружено ${barcodeMap.size} записей из IndexedDB`);
+                    resolve(barcodeMap.size);
+                };
+                
+                request.onerror = () => {
+                    console.error('Ошибка запроса к IndexedDB:', request.error);
+                    reject(request.error);
+                };
+            });
+        }
+
+        // Показ/скрытие экранов
+        function showScreen(screenId) {
+            document.getElementById('loginScreen').style.display = screenId === 'loginScreen' ? 'block' : 'none';
+            document.getElementById('scannerScreen').style.display = screenId === 'scannerScreen' ? 'block' : 'none';
+        }
+
+        // Проверка авторизации при загрузке
+        firebase.auth().onAuthStateChanged(async function(currentUser) {
+            user = currentUser;
+            if (user) {
+                showScreen('scannerScreen');
+                document.getElementById('userInfo').textContent = user.email;
+                console.log('Пользователь авторизован:', user.email);
+                
+                // Загружаем маппинг из IndexedDB
+                try {
+                    await initIndexedDB();
+                    const count = await loadFromIndexedDB();
+                    updateBarcodeCount();
+                    updateMappingList();
+                    showNotification(document.getElementById('mappingStatus'), `Загружено ${count} записей из базы`, 'success');
+                } catch (error) {
+                    console.error('Ошибка загрузки маппинга:', error);
+                    showNotification(document.getElementById('mappingStatus'), 'Ошибка загрузки маппинга: ' + error.message, 'error');
+                }
+            } else {
+                showScreen('loginScreen');
+                console.log('Пользователь не авторизован');
+            }
+        });
+
+        // Функция входа
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const notification = document.getElementById('loginNotification');
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (!email || !password) {
+                showNotification(notification, 'Заполните все поля', 'error');
+                return;
+            }
+
+            try {
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Вход...';
+                
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                showNotification(notification, 'Успешный вход!', 'success');
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                let message = 'Ошибка входа: ' + error.message;
+                showNotification(notification, message, 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Войти';
+            }
+        }
+
+        // Функция выхода
+        async function logout() {
+            try {
+                await firebase.auth().signOut();
+                console.log('Выход выполнен');
+            } catch (error) {
+                console.error('Ошибка выхода:', error);
+            }
+        }
+
+        // Обработка CSV файла
+        function handleCsvUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const notification = document.getElementById('mappingStatus');
+            const loadBtn = document.getElementById('loadMappingBtn');
+            
+            if (!file.name.endsWith('.csv')) {
+                showNotification(notification, 'Выберите CSV файл', 'error');
+                return;
+            }
+
+            loadBtn.disabled = true;
+            loadBtn.textContent = 'Загрузка...';
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const csv = e.target.result;
+                    const lines = csv.split('\n').filter(line => line.trim() !== '');
+                    
+                    console.log(`Обработка CSV: ${lines.length} строк`);
+                    
+                    if (lines.length < 2) {
+                        showNotification(notification, 'CSV файл пуст или содержит только заголовки', 'error');
+                        return;
+                    }
+
+                    // Определяем разделитель
+                    let separator = ',';
+                    if (lines[0].includes(';')) separator = ';';
+                    if (lines[0].includes('\t')) separator = '\t';
+
+                    const headers = lines[0].split(separator).map(h => h.trim().toLowerCase());
+                    console.log('Заголовки CSV:', headers);
+                    
+                    // Находим индексы колонок
+                    const barcodeIndex = headers.findIndex(h => 
+                        h.includes('штрихкод') || h.includes('штрих') || h.includes('barcode') || h.includes('code'));
+                    const articleIndex = headers.findIndex(h => 
+                        h.includes('артикул') || h.includes('article') || h.includes('art'));
+                    const colorIndex = headers.findIndex(h => 
+                        h.includes('цвет') || h.includes('color') || h.includes('col'));
+                    const sizeIndex = headers.findIndex(h => 
+                        h.includes('размер') || h.includes('size') || h.includes('siz'));
+
+                    console.log('Индексы колонок:', {barcodeIndex, articleIndex, colorIndex, sizeIndex});
+
+                    if ([barcodeIndex, articleIndex, colorIndex, sizeIndex].includes(-1)) {
+                        showNotification(notification, 'Неверный формат CSV. Ожидаются колонки: Штрихкод, Артикул, Цвет, Размер', 'error');
+                        return;
+                    }
+
+                    let loadedCount = 0;
+                    let skippedCount = 0;
+
+                    const tempMap = new Map();
+
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].split(separator).map(cell => cell.trim());
+                        if (line.length < 4) continue;
+                        
+                        const barcode = line[barcodeIndex];
+                        const article = line[articleIndex];
+                        const color = line[colorIndex];
+                        const size = line[sizeIndex];
+                        
+                        if (barcode && article && color && size) {
+                            if (/^\d{12,13}$/.test(barcode)) {
+                                tempMap.set(barcode, { article, color, size });
+                                loadedCount++;
+                            } else {
+                                console.log(`Пропущен невалидный штрихкод: ${barcode}`);
+                                skippedCount++;
+                            }
+                        }
+                    }
+
+                    console.log(`Обработано: загружено ${loadedCount}, пропущено ${skippedCount}`);
+
+                    // Сохраняем в IndexedDB
+                    await saveToIndexedDB(tempMap);
+                    barcodeMap = tempMap;
+                    
+                    updateBarcodeCount();
+                    updateMappingList();
+
+                    let message = `Успешно загружено ${loadedCount} записей из CSV`;
+                    if (skippedCount > 0) {
+                        message += ` (пропущено ${skippedCount} невалидных штрихкодов)`;
+                    }
+                    showNotification(notification, message, 'success');
+
+                } catch (error) {
+                    console.error('Ошибка обработки CSV:', error);
+                    showNotification(notification, 'Ошибка обработки CSV: ' + error.message, 'error');
+                } finally {
+                    loadBtn.disabled = false;
+                    loadBtn.textContent = 'Загрузить маппинг';
+                }
+            };
+            
+            reader.onerror = function() {
+                console.error('Ошибка чтения файла');
+                showNotification(document.getElementById('mappingStatus'), 'Ошибка чтения файла', 'error');
+                loadBtn.disabled = false;
+                loadBtn.textContent = 'Загрузить маппинг';
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        // Загрузка маппинга из файла
+        function loadMappingFromFile() {
+            const fileInput = document.getElementById('csvFile');
+            if (!fileInput.files[0]) {
+                showNotification(document.getElementById('mappingStatus'), 'Выберите CSV файл', 'error');
+                return;
+            }
+            handleCsvUpload({ target: fileInput });
+        }
+
+        // Очистка маппинга
+        async function clearMapping() {
+            if (confirm('Вы уверены, что хотите очистить весь маппинг?')) {
+                try {
+                    if (!db) await initIndexedDB();
+                    const transaction = db.transaction(['barcodeMapping'], 'readwrite');
+                    const store = transaction.objectStore('barcodeMapping');
+                    const clearRequest = store.clear();
+                    
+                    clearRequest.onsuccess = () => {
+                        barcodeMap.clear();
+                        updateBarcodeCount();
+                        updateMappingList();
+                        showNotification(document.getElementById('mappingStatus'), 'Маппинг очищен', 'success');
+                        console.log('Маппинг очищен');
+                    };
+                    
+                    clearRequest.onerror = (error) => {
+                        console.error('Ошибка очистки маппинга:', error);
+                        showNotification(document.getElementById('mappingStatus'), 'Ошибка очистки', 'error');
+                    };
+                } catch (error) {
+                    console.error('Ошибка очистки маппинга:', error);
+                    showNotification(document.getElementById('mappingStatus'), 'Ошибка очистки', 'error');
+                }
+            }
+        }
+
+        // Обновление счетчика штрихкодов
+        function updateBarcodeCount() {
+            const barcodeCountElement = document.getElementById('barcodeCount');
+            if (barcodeCountElement) {
+                barcodeCountElement.textContent = barcodeMap.size;
+                console.log(`Обновлен счетчик штрихкодов: ${barcodeMap.size}`);
+            } else {
+                console.error('Элемент barcodeCount не найден');
+            }
+        }
+
+        // Обновление списка маппинга
+        function updateMappingList() {
+            const mappingList = document.getElementById('mappingList');
+            if (!mappingList) {
+                console.error('Элемент mappingList не найден');
+                return;
+            }
+
+            if (barcodeMap.size === 0) {
+                mappingList.innerHTML = '<div style="text-align: center; color: #666; padding: 10px;">Маппинг пуст</div>';
+                return;
+            }
+
+            let html = '';
+            let count = 0;
+            for (let [barcode, data] of barcodeMap) {
+                if (count >= 10) {
+                    html += `<div style="text-align: center; color: #666; padding: 5px;">... и еще ${barcodeMap.size - 10} записей</div>`;
+                    break;
+                }
+                html += `<div style="padding: 5px; border-bottom: 1px solid #eee; font-size: 11px;">
+                    <strong>${barcode}</strong> → ${data.article} / ${data.color} / ${data.size}
+                </div>`;
+                count++;
+            }
+            mappingList.innerHTML = html;
+            console.log(`Обновлен список маппинга, показано ${count} записей`);
+        }
+
+        // Парсинг штрихкода
+        function parseBarcode(barcode) {
+            if (!barcode || !/^\d{12,13}$/.test(barcode)) {
+                throw new Error('Неверный формат штрихкода (12-13 цифр)');
+            }
+
+            const mapping = barcodeMap.get(barcode);
+            if (!mapping) {
+                throw new Error('Штрихкод не найден в маппинге');
+            }
+
+            return mapping;
+        }
+
+        // Функция добавления отсканированной пары
+        async function addScannedPair() {
+            const barcode = document.getElementById('barcodeInput').value.trim();
+            const leftSize = document.getElementById('leftSize').value.trim();
+            const rightSize = document.getElementById('rightSize').value.trim();
+            const pallet = document.getElementById('pallet').value.trim();
+            const notification = document.getElementById('scanNotification');
+            const addBtn = document.getElementById('addPairBtn');
+
+            if (!barcode) {
+                showNotification(notification, 'Введите штрихкод', 'error');
+                return;
+            }
+
+            if (!pallet) {
+                showNotification(notification, 'Введите номер паллеты', 'error');
+                return;
+            }
+
+            try {
+                addBtn.disabled = true;
+                addBtn.textContent = 'Добавление...';
+                
+                const parsed = parseBarcode(barcode);
+                
+                const scanData = {
+                    article: parsed.article,
+                    color: parsed.color,
+                    size: parsed.size,
+                    leftSize: leftSize || '',
+                    rightSize: rightSize || '',
+                    pallet: pallet,
+                    timestamp: new Date().toISOString(),
+                    userId: user.uid,
+                    userEmail: user.email,
+                    device: 'Zebra TC26',
+                    status: 'new',
+                    scanId: Date.now() + Math.random().toString(36).substr(2, 9)
+                };
+
+                console.log('Отправка данных сканера:', scanData);
+
+                // Сохраняем в Firebase
+                const newScanRef = firebase.database().ref('scans').push();
+                await newScanRef.set(scanData);
+
+                showNotification(notification, '✅ Данные отправлены!', 'success');
+                clearForm();
+
+            } catch (error) {
+                console.error('Ошибка добавления пары:', error);
+                let errorMessage = '❌ Ошибка: ';
+                
+                if (error.code === 'PERMISSION_DENIED') {
+                    errorMessage += 'Нет прав доступа к базе данных. Проверьте правила Firebase.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                showNotification(notification, errorMessage, 'error');
+            } finally {
+                addBtn.disabled = false;
+                addBtn.textContent = 'Добавить в систему';
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('barcodeInput').value = '';
+            document.getElementById('leftSize').value = '';
+            document.getElementById('rightSize').value = '';
+            document.getElementById('pallet').value = '';
+            document.getElementById('parsedData').classList.remove('show');
+            document.getElementById('barcodeInput').focus();
+        }
+
+        function showNotification(element, message, type) {
+            if (element) {
+                element.textContent = message;
+                element.className = `notification ${type} show`;
+                setTimeout(() => element.classList.remove('show'), 5000);
+            }
+        }
+
+        // Назначение обработчиков событий после загрузки DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM загружен, назначаем обработчики');
+            
+            // Обработчики кнопок
+            document.getElementById('loginBtn').addEventListener('click', login);
+            document.getElementById('addPairBtn').addEventListener('click', addScannedPair);
+            document.getElementById('clearFormBtn').addEventListener('click', clearForm);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('csvFile').addEventListener('change', handleCsvUpload);
+            document.getElementById('loadMappingBtn').addEventListener('click', loadMappingFromFile);
+            document.getElementById('clearMappingBtn').addEventListener('click', clearMapping);
+
+            // Обработчик входа по Enter
+            document.getElementById('password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    login();
+                }
+            });
+
+            // Обработчики для штрихкода
+            document.getElementById('barcodeInput').addEventListener('input', function(e) {
+                const value = e.target.value.trim();
+                
+                if (value.length === 12 || value.length === 13) {
+                    try {
+                        const parsed = parseBarcode(value);
+                        
+                        // Показываем распарсенные данные
+                        document.getElementById('articleDisplay').textContent = parsed.article;
+                        document.getElementById('colorDisplay').textContent = parsed.color;
+                        document.getElementById('sizeDisplay').textContent = parsed.size;
+                        document.getElementById('parsedData').classList.add('show');
+                        
+                        // Автофокус на следующее поле
+                        setTimeout(() => document.getElementById('leftSize').focus(), 100);
+                        
+                    } catch (error) {
+                        document.getElementById('parsedData').classList.remove('show');
+                    }
+                }
+            });
+
+            // Автопереход между полями по Enter
+            document.getElementById('barcodeInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('leftSize').focus();
+                }
+            });
+
+            document.getElementById('leftSize').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('rightSize').focus();
+                }
+            });
+
+            document.getElementById('rightSize').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('pallet').focus();
+                }
+            });
+
+            document.getElementById('pallet').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addScannedPair();
+                }
+            });
+        });
+
+        // Отслеживание соединения
+        function updateConnectionStatus() {
+            const statusElement = document.getElementById('connectionStatus');
+            if (isOnline) {
+                statusElement.textContent = '🟢 Онлайн';
+                statusElement.style.color = '#4CAF50';
+            } else {
+                statusElement.textContent = '🔴 Оффлайн';
+                statusElement.style.color = '#dc3545';
+            }
+        }
+
+        window.addEventListener('online', () => {
+            isOnline = true;
+            updateConnectionStatus();
+            showNotification(document.getElementById('scanNotification'), 'Соединение восстановлено', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            isOnline = false;
+            updateConnectionStatus();
+            showNotification(document.getElementById('scanNotification'), 'Режим оффлайн', 'warning');
+        });
+
+        // Инициализация статуса соединения
+        updateConnectionStatus();
+        // Регистрация Service Worker для PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(reg => console.log('SW зарегистрирован: ', reg.scope))
+      .catch(err => console.log('SW регистрация провалилась: ', err));
+  });
+}
+    </script>
+</body>
+</html>

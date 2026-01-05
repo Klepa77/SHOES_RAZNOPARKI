@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="container">
+        <div class="logo"></div>
+        <h2>Вход в систему</h2>
+        <div class="form-group">
+            <input type="email" id="email" placeholder="Введите email">
+        </div>
+        <div class="form-group">
+            <input type="password" id="password" placeholder="Введите пароль">
+        </div>
+        <div id="error" class="error"></div>
+        <div id="success" class="success"></div>
+        <button onclick="signIn()">Войти</button>
+        <div class="links">
+            <p><a href="register.html">Нет аккаунта? Зарегистрируйтесь</a></p>
+            <p><a href="forgot-password.html">Забыли пароль?</a></p>
+        </div>
+    </div>
+    <script src="login.js" type="module"></script>
+</body>
+</html>
